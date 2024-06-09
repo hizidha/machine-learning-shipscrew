@@ -30,10 +30,8 @@ def encode_columns(df):
 
 
 def getRecommendation(dataCandidates):
-    # URL berbagi file Excel di Google Drive
-    # url = 'https://docs.google.com/spreadsheets/d/151Kn-JdETipRu_IsJty1-tzx_5iH8TeP/export?format=xlsx'
-    # response = requests.get(url)
-    
+    # URL Google Drive
+    # response = requests.get(https://docs.google.com/spreadsheets/d/151Kn-JdETipRu_IsJty1-tzx_5iH8TeP/export?format=xlsx)
     # if response.status_code == 200:
     #     with BytesIO(response.content) as f:
     #         df = pd.read_excel(f)
@@ -41,12 +39,16 @@ def getRecommendation(dataCandidates):
     #     print("Failed:", response.status_code)
     
     df = pd.read_excel('./data/datashipsCrew.xlsx')
-
     df.drop('NO', axis=1, inplace=True)
+    
+    df['PHONE_NUMBER_2'] = df['PHONE_NUMBER'].copy() 
+    df['AGE_EN'] = df['AGE'].copy()
+    
     df['NAME'] = df['NAME'].str.title()
     df['GENDER'] = df['GENDER'].str.upper()
     df['LAST_POSITION'] = df['LAST_POSITION'].str.lower()
-    df['AGE_EN'] = df['AGE'].copy()
+    df['PHONE_NUMBER'] = df['PHONE_NUMBER'].str.lstrip('+')
+    df['PHONE_NUMBER_2'] = df['PHONE_NUMBER_2'].str.replace(r'^\+62', '0', regex=True)
     
     df = encode_columns(df)
     
@@ -82,6 +84,7 @@ def getRecommendation(dataCandidates):
         }
         last_position_tfidf_input = tfidf_vectorizer.transform([dataCandidate['LAST_POSITION']]).toarray()
 
+
     input_features = [encoded_input[feat] for feat in features]
     input_features.extend(last_position_tfidf_input[0])
 
@@ -89,7 +92,7 @@ def getRecommendation(dataCandidates):
     recommendation_indices = [idx for idx, sim in enumerate(cosine_similarities) if sim > 0 and df.loc[idx, 'CERTIFICATE_EN'] >= encoded_input['CERTIFICATE_EN']]
     recommendation_indices.sort(key=lambda idx: cosine_similarities[idx], reverse=True)
     
-    recommendations = df.iloc[recommendation_indices][['NAME', 'AGE', 'GENDER', 'STATUS', 'EDU_LEVEL', 'EXPERIENCE', 'LAST_POSITION', 'CERTIFICATE']]
+    recommendations = df.iloc[recommendation_indices][['NAME', 'AGE', 'GENDER', 'STATUS', 'EDU_LEVEL', 'EXPERIENCE', 'LAST_POSITION', 'CERTIFICATE', 'PHONE_NUMBER', 'PHONE_NUMBER_2']]
     recommendations['SIMILARITY (%)'] = [round(similarity * 100, 2) for similarity in cosine_similarities[recommendation_indices]]
     
     recommendations = recommendations[recommendations['SIMILARITY (%)'] >= 70]  # Filter recommendations with similarity >= 70%

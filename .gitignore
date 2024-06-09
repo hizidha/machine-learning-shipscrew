@@ -1,1 +1,2 @@
-.vercel
+# Folder specific rules
+**/__pycache__/

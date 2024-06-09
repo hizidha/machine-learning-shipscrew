@@ -1,5 +1,6 @@
-import numpy as np
+import requests
 import pandas as pd
+from io import BytesIO
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
@@ -29,6 +30,16 @@ def encode_columns(df):
 
 
 def getRecommendation(dataCandidates):
+    # URL berbagi file Excel di Google Drive
+    # url = 'https://docs.google.com/spreadsheets/d/151Kn-JdETipRu_IsJty1-tzx_5iH8TeP/export?format=xlsx'
+    # response = requests.get(url)
+    
+    # if response.status_code == 200:
+    #     with BytesIO(response.content) as f:
+    #         df = pd.read_excel(f)
+    # else:
+    #     print("Failed:", response.status_code)
+    
     df = pd.read_excel('./data/datashipsCrew.xlsx')
 
     df.drop('NO', axis=1, inplace=True)
@@ -44,9 +55,7 @@ def getRecommendation(dataCandidates):
     
     features = ['AGE_EN', 'GENDER_EN', 'STATUS_EN', 'EDU_LEVEL_EN', 'EXPERIENCE_EN']
     df[features] = df[features].fillna(-1).astype(int)
-    
     all_features = pd.concat([pd.DataFrame(df[features]), pd.DataFrame(last_position_tfidf)], axis=1)
-    similarity_matrix = cosine_similarity(all_features)
 
     if len(dataCandidates) > 1:
         encoded_input = {
